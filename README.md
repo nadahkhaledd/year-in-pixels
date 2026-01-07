@@ -3,5 +3,6 @@
 ## Year In Pixels App
 https://yearin-pixels.netlify.app/ 
 
-## App Preview
-![Year in Pixels Screenshot](./year-in-pixels.jpg)
+<p align="left">
+  <img src="./year-in-pixels.jpg" width="30%">
+</p>
