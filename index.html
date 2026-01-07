@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>MoodYear</title>
+    <title>Year In Pixels</title>
     <style>
         :root {
-            --bg-color: #201E33; /* Darker purple/blue background */
-            --cell-bg: #35334c;  /* Empty cell color */
+            --bg-color: #201E33;
+            --cell-bg: #35334c;
             --text-color: #ffffff;
             --modal-bg: #2D2B42;
+            --accent: #444;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -22,7 +23,7 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            overflow: hidden; /* Prevent body scroll */
+            overflow: hidden;
             -webkit-user-select: none;
             touch-action: manipulation;
         }
@@ -38,36 +39,34 @@
         }
         h1 { margin: 0; font-size: 28px; font-weight: 800; }
         .btn-small {
-            background: #444; border: none; color: white;
-            padding: 5px 10px; border-radius: 5px; font-size: 12px;
+            background: var(--accent); border: none; color: white;
+            padding: 8px 15px; border-radius: 6px; font-size: 13px; font-weight: 600;
         }
 
-        /* MAIN LAYOUT: Grid on Left, Legend on Right */
+        /* MAIN LAYOUT */
         .main-container {
             display: flex;
             flex: 1;
             gap: 10px;
-            overflow: hidden; /* Keep everything inside */
+            overflow: hidden;
         }
 
         /* LEFT: CALENDAR GRID */
         .calendar-wrapper {
             flex: 1;
-            overflow: auto; /* Allow scrolling if screen is tiny */
+            overflow: auto;
         }
         .grid {
             display: grid;
-            grid-template-columns: 20px repeat(12, 1fr); /* Day Num + 12 Months */
+            grid-template-columns: 20px repeat(12, 1fr);
             gap: 2px;
             width: 100%;
-            min-width: 280px; /* Ensure it doesn't get too squashed */
+            min-width: 280px;
         }
         
-        /* Headers */
         .month-label { text-align: center; font-size: 10px; font-weight: bold; color: #888; padding-bottom: 2px; }
         .day-label { text-align: right; font-size: 9px; color: #666; padding-right: 4px; line-height: 20px; }
 
-        /* Cells */
         .cell {
             aspect-ratio: 1;
             background-color: var(--cell-bg);
@@ -100,10 +99,10 @@
             flex-shrink: 0;
         }
 
-        /* MODAL POPUP */
+        /* MODAL POPUP SYSTEM */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             display: none;
             justify-content: center;
             align-items: center;
@@ -113,12 +112,16 @@
             background: var(--modal-bg);
             padding: 20px;
             border-radius: 12px;
-            width: 80%;
-            max-width: 300px;
+            width: 85%;
+            max-width: 320px;
             text-align: center;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            max-height: 80vh;
+            overflow-y: auto;
         }
-        .modal-title { margin-bottom: 15px; font-size: 16px; color: #aaa; }
+        .modal-title { margin-bottom: 15px; font-size: 18px; font-weight: bold; color: white; }
+        
+        /* Mood Grid */
         .mood-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -127,7 +130,7 @@
         .mood-option {
             background: rgba(255,255,255,0.05);
             border: none;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             color: white;
             font-size: 14px;
@@ -138,24 +141,42 @@
         .mood-option:active { background: rgba(255,255,255,0.1); }
         .mood-dot { width: 14px; height: 14px; border-radius: 50%; }
 
+        /* Data Input Area */
+        textarea {
+            width: 90%;
+            height: 100px;
+            background: #111;
+            border: 1px solid #444;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            resize: none;
+        }
+        .action-btn {
+            background: #555;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .btn-cancel { background: transparent; color: #888; }
+
         /* MOOD COLORS */
         .bg-happy { background-color: #FF0055 !important; }
-        .bg-motivated { background-color: #FF9900 !important; }
-        .bg-good { background-color: #FFDD00 !important; }
-        .bg-energetic { background-color: #00CC44 !important; }
-        .bg-relaxed { background-color: #00AACC !important; }
-        .bg-sad { background-color: #0066FF !important; }
-        .bg-anxious { background-color: #9900CC !important; }
-        .bg-tired { background-color: #664422 !important; }
-        .bg-angry { background-color: #CC0000 !important; }
-
+        
     </style>
 </head>
 <body>
 
     <header>
         <h1 id="yearLabel">2026</h1>
-        <button class="btn-small" onclick="exportData()">Backup</button>
+        <button class="btn-small" onclick="openDataModal()">Data</button>
     </header>
 
     <div class="main-container">
@@ -166,11 +187,25 @@
         <div class="legend-sidebar" id="sidebar"></div>
     </div>
 
-    <div class="modal-overlay" id="modal">
+    <div class="modal-overlay" id="moodModal">
         <div class="modal-content">
             <div class="modal-title" id="modalDateDisplay">Select Mood</div>
             <div class="mood-grid" id="moodOptions"></div>
-            <button style="margin-top:15px; background:none; border:none; color:#666;" onclick="closeModal()">Cancel</button>
+            <button class="action-btn btn-cancel" onclick="closeMoodModal()">Cancel</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="dataModal">
+        <div class="modal-content">
+            <div class="modal-title">Backup & Restore</div>
+            
+            <p style="font-size:12px; color:#aaa; margin-bottom:10px;">To Backup: Click Copy, then paste into Notes.<br>To Restore: Paste data below and click Load.</p>
+            
+            <textarea id="dataInput" placeholder='Paste your data here...'></textarea>
+            
+            <button class="action-btn" style="background: #007AFF;" onclick="copyData()">Copy Data to Clipboard</button>
+            <button class="action-btn" style="background: #34C759;" onclick="loadData()">Load Data (Restore)</button>
+            <button class="action-btn btn-cancel" onclick="closeDataModal()">Close</button>
         </div>
     </div>
 
@@ -220,33 +255,24 @@
     // 2. RENDER GRID
     function renderGrid() {
         grid.innerHTML = '';
+        // Header Row
+        grid.appendChild(createDiv('')); 
+        months.forEach(m => grid.appendChild(createDiv(m, 'month-label')));
 
-        // Header Row (Months)
-        grid.appendChild(createDiv('')); // Corner spacer
-        months.forEach(m => {
-            grid.appendChild(createDiv(m, 'month-label'));
-        });
-
-        // Rows (Days 1-31)
+        // Rows
         for (let day = 1; day <= 31; day++) {
-            // Day Number
             grid.appendChild(createDiv(day, 'day-label'));
-
-            // 12 Months Columns
             for (let month = 0; month < 12; month++) {
                 if (isValidDate(day, month)) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
                     const key = `${month}-${day}`;
                     
-                    // Apply saved color if exists
                     if (moodData[key]) {
                         const m = moods.find(x => x.id === moodData[key]);
                         if (m) cell.style.backgroundColor = m.color;
                     }
-
-                    // CLICK EVENT: Open Modal
-                    cell.addEventListener('click', () => openModal(key, day, month));
+                    cell.addEventListener('click', () => openMoodModal(key, day, month));
                     grid.appendChild(cell);
                 } else {
                     grid.appendChild(createDiv('', 'cell empty'));
@@ -255,19 +281,19 @@
         }
     }
 
-    // 3. RENDER MODAL BUTTONS
+    // 3. RENDER MOOD BUTTONS
     function renderModalOptions() {
         const container = document.getElementById('moodOptions');
         container.innerHTML = '';
         
-        // "Clear" option
+        // Clear Button
         const clearBtn = document.createElement('button');
         clearBtn.className = 'mood-option';
         clearBtn.innerHTML = `<div class="mood-dot" style="border:1px solid #555"></div> Clear`;
         clearBtn.onclick = () => saveMood(null);
         container.appendChild(clearBtn);
 
-        // Mood options
+        // Mood Buttons
         moods.forEach(m => {
             const btn = document.createElement('button');
             btn.className = 'mood-option';
@@ -278,10 +304,8 @@
     }
 
     // --- LOGIC ---
-
     function isValidDate(day, month) {
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        return day <= daysInMonth;
+        return day <= new Date(year, month + 1, 0).getDate();
     }
 
     function createDiv(content, className) {
@@ -291,42 +315,67 @@
         return div;
     }
 
-    // MODAL FUNCTIONS
-    const modal = document.getElementById('modal');
+    // --- MOOD MODAL ---
+    const moodModal = document.getElementById('moodModal');
     
-    function openModal(key, day, month) {
+    function openMoodModal(key, day, month) {
         selectedDateKey = key;
         const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
         document.getElementById('modalDateDisplay').innerText = `${monthName} ${day}`;
-        modal.style.display = 'flex';
+        moodModal.style.display = 'flex';
     }
 
-    function closeModal() {
-        modal.style.display = 'none';
+    function closeMoodModal() {
+        moodModal.style.display = 'none';
         selectedDateKey = null;
     }
 
     function saveMood(moodId) {
         if (!selectedDateKey) return;
-
-        if (moodId) {
-            moodData[selectedDateKey] = moodId;
-        } else {
-            delete moodData[selectedDateKey]; // Handle "Clear"
-        }
-
+        if (moodId) moodData[selectedDateKey] = moodId;
+        else delete moodData[selectedDateKey];
+        
         localStorage.setItem('moodYearData', JSON.stringify(moodData));
-        renderGrid(); // Re-draw grid to show new color
-        closeModal();
+        renderGrid();
+        closeMoodModal();
     }
 
-    // EXPORT
-    window.exportData = function() {
-        const str = JSON.stringify(moodData);
-        navigator.clipboard.writeText(str).then(() => alert('Data copied to clipboard!'));
+    // --- DATA MODAL ---
+    const dataModal = document.getElementById('dataModal');
+    const dataInput = document.getElementById('dataInput');
+
+    function openDataModal() {
+        dataModal.style.display = 'flex';
+        dataInput.value = JSON.stringify(moodData);
     }
 
-    // Run on load
+    function closeDataModal() {
+        dataModal.style.display = 'none';
+    }
+
+    function copyData() {
+        dataInput.select();
+        dataInput.setSelectionRange(0, 99999); // For mobile
+        navigator.clipboard.writeText(dataInput.value).then(() => {
+            alert('Copied! Paste this into a secure Note.');
+        });
+    }
+
+    function loadData() {
+        try {
+            const raw = dataInput.value;
+            if(!raw) return alert("Please paste data first.");
+            const parsed = JSON.parse(raw);
+            moodData = parsed;
+            localStorage.setItem('moodYearData', JSON.stringify(moodData));
+            renderGrid();
+            alert("Data restored successfully!");
+            closeDataModal();
+        } catch (e) {
+            alert("Invalid Data! Please copy the exact text exported previously.");
+        }
+    }
+
     init();
 
 </script>
