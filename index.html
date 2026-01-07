@@ -5,238 +5,330 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="MoodYear">
     <title>MoodYear</title>
     <style>
         :root {
-            --bg-color: #2D2B42; /* Dark background from screenshot */
-            --grid-color: #3D3B54;
+            --bg-color: #201E33; /* Darker purple/blue background */
+            --cell-bg: #35334c;  /* Empty cell color */
             --text-color: #ffffff;
+            --modal-bg: #2D2B42;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            -webkit-user-select: none; /* Disable text selection */
+            height: 100vh;
+            overflow: hidden; /* Prevent body scroll */
+            -webkit-user-select: none;
+            touch-action: manipulation;
         }
-        h1 { margin: 10px 0 20px 0; font-size: 32px; font-weight: 800; }
-        
-        /* THE GRID */
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+            margin-bottom: 10px;
+        }
+        h1 { margin: 0; font-size: 28px; font-weight: 800; }
+        .btn-small {
+            background: #444; border: none; color: white;
+            padding: 5px 10px; border-radius: 5px; font-size: 12px;
+        }
+
+        /* MAIN LAYOUT: Grid on Left, Legend on Right */
+        .main-container {
+            display: flex;
+            flex: 1;
+            gap: 10px;
+            overflow: hidden; /* Keep everything inside */
+        }
+
+        /* LEFT: CALENDAR GRID */
         .calendar-wrapper {
-            overflow-x: auto;
-            max-width: 100%;
-            padding-bottom: 20px;
+            flex: 1;
+            overflow: auto; /* Allow scrolling if screen is tiny */
         }
         .grid {
             display: grid;
-            grid-template-columns: 25px repeat(12, 1fr); /* Day label + 12 months */
-            gap: 4px;
+            grid-template-columns: 20px repeat(12, 1fr); /* Day Num + 12 Months */
+            gap: 2px;
+            width: 100%;
+            min-width: 280px; /* Ensure it doesn't get too squashed */
         }
         
-        /* LABELS */
-        .header-row { display: contents; }
-        .month-label {
-            text-align: center;
-            font-size: 10px;
-            font-weight: bold;
-            color: #888;
-            margin-bottom: 5px;
-        }
-        .day-label {
-            text-align: right;
-            font-size: 10px;
-            color: #888;
-            padding-right: 5px;
-            line-height: 24px;
-        }
-        
-        /* PIXELS */
-        .day-cell {
-            width: 24px;
-            height: 24px;
-            background-color: var(--grid-color);
-            border-radius: 4px;
+        /* Headers */
+        .month-label { text-align: center; font-size: 10px; font-weight: bold; color: #888; padding-bottom: 2px; }
+        .day-label { text-align: right; font-size: 9px; color: #666; padding-right: 4px; line-height: 20px; }
+
+        /* Cells */
+        .cell {
+            aspect-ratio: 1;
+            background-color: var(--cell-bg);
+            border-radius: 2px;
             cursor: pointer;
-            transition: transform 0.1s;
         }
-        .day-cell:active { transform: scale(0.9); }
-        .hidden-cell { background: transparent; pointer-events: none; }
+        .cell:active { opacity: 0.7; }
+        .cell.empty { background: transparent; pointer-events: none; }
+
+        /* RIGHT: LEGEND SIDEBAR */
+        .legend-sidebar {
+            width: 90px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            padding-left: 5px;
+            border-left: 1px solid #333;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #ddd;
+        }
+        .legend-color {
+            width: 12px; height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        /* MODAL POPUP */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: var(--modal-bg);
+            padding: 20px;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .modal-title { margin-bottom: 15px; font-size: 16px; color: #aaa; }
+        .mood-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .mood-option {
+            background: rgba(255,255,255,0.05);
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .mood-option:active { background: rgba(255,255,255,0.1); }
+        .mood-dot { width: 14px; height: 14px; border-radius: 50%; }
 
         /* MOOD COLORS */
-        .mood-happy { background-color: #FF0055 !important; }     /* Red */
-        .mood-motivated { background-color: #FF9900 !important; } /* Orange */
-        .mood-good { background-color: #FFDD00 !important; }      /* Yellow */
-        .mood-energetic { background-color: #00CC44 !important; } /* Green */
-        .mood-relaxed { background-color: #00AACC !important; }   /* Teal */
-        .mood-sad { background-color: #0066FF !important; }       /* Blue */
-        .mood-anxious { background-color: #9900CC !important; }   /* Purple */
-        .mood-tired { background-color: #664422 !important; }     /* Brown */
-
-        /* LEGEND BUTTONS */
-        .controls {
-            margin-top: 30px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            max-width: 350px;
-        }
-        .mood-btn {
-            border: none;
-            padding: 10px 15px;
-            border-radius: 20px;
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-            opacity: 0.8;
-        }
-        .mood-btn.selected { opacity: 1; outline: 3px solid white; }
-        
-        /* EXPORT BUTTON */
-        .action-btn {
-            margin-top: 30px;
-            background: #444;
-            color: #aaa;
-            border: 1px solid #555;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-        }
+        .bg-happy { background-color: #FF0055 !important; }
+        .bg-motivated { background-color: #FF9900 !important; }
+        .bg-good { background-color: #FFDD00 !important; }
+        .bg-energetic { background-color: #00CC44 !important; }
+        .bg-relaxed { background-color: #00AACC !important; }
+        .bg-sad { background-color: #0066FF !important; }
+        .bg-anxious { background-color: #9900CC !important; }
+        .bg-tired { background-color: #664422 !important; }
+        .bg-angry { background-color: #CC0000 !important; }
 
     </style>
 </head>
 <body>
 
-    <h1 id="yearTitle">2026</h1>
+    <header>
+        <h1 id="yearLabel">2026</h1>
+        <button class="btn-small" onclick="exportData()">Backup</button>
+    </header>
 
-    <div class="calendar-wrapper">
-        <div class="grid" id="calendarGrid">
-            </div>
-    </div>
-
-    <div style="margin-top: 20px; font-size: 14px; color: #888;">Select a mood, then tap a day:</div>
-
-    <div class="controls" id="legend">
+    <div class="main-container">
+        <div class="calendar-wrapper">
+            <div class="grid" id="grid"></div>
         </div>
 
-    <button class="action-btn" onclick="exportData()">Backup Data (Copy to Clipboard)</button>
-    <button class="action-btn" onclick="importData()">Restore Data</button>
+        <div class="legend-sidebar" id="sidebar"></div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalDateDisplay">Select Mood</div>
+            <div class="mood-grid" id="moodOptions"></div>
+            <button style="margin-top:15px; background:none; border:none; color:#666;" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
 
 <script>
+    // --- CONFIGURATION ---
     const year = new Date().getFullYear();
-    document.getElementById('yearTitle').innerText = year;
+    document.getElementById('yearLabel').innerText = year;
 
-    // Mood Definitions (matches your screenshot colors roughly)
     const moods = [
-        { name: 'Happy', class: 'mood-happy', color: '#FF0055' },
-        { name: 'Motivated', class: 'mood-motivated', color: '#FF9900' },
-        { name: 'Good', class: 'mood-good', color: '#FFDD00' },
-        { name: 'Energetic', class: 'mood-energetic', color: '#00CC44' },
-        { name: 'Relaxed', class: 'mood-relaxed', color: '#00AACC' },
-        { name: 'Sad', class: 'mood-sad', color: '#0066FF' },
-        { name: 'Anxious', class: 'mood-anxious', color: '#9900CC' },
-        { name: 'Tired', class: 'mood-tired', color: '#664422' },
+        { id: 'happy', name: 'Happy', color: '#FF0055' },
+        { id: 'motivated', name: 'Motivated', color: '#FF9900' },
+        { id: 'good', name: 'Good', color: '#FFDD00' },
+        { id: 'energetic', name: 'Energetic', color: '#00CC44' },
+        { id: 'relaxed', name: 'Relaxed', color: '#00AACC' },
+        { id: 'sad', name: 'Sad', color: '#0066FF' },
+        { id: 'anxious', name: 'Anxious', color: '#9900CC' },
+        { id: 'tired', name: 'Tired', color: '#664422' },
+        { id: 'angry', name: 'Angry', color: '#CC0000' }
     ];
 
-    let currentMood = moods[0]; // Default selection
-    
-    // Load saved data from phone storage
-    let moodData = JSON.parse(localStorage.getItem('myMoodYearData')) || {};
+    // --- STATE ---
+    let moodData = JSON.parse(localStorage.getItem('moodYearData')) || {};
+    let selectedDateKey = null;
 
+    // --- INITIALIZATION ---
+    const grid = document.getElementById('grid');
+    const sidebar = document.getElementById('sidebar');
     const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
-    const daysInMonth = (m, y) => new Date(y, m + 1, 0).getDate();
 
-    // 1. GENERATE GRID
-    const grid = document.getElementById('calendarGrid');
+    function init() {
+        renderSidebar();
+        renderGrid();
+        renderModalOptions();
+    }
 
-    // Header Row (Months)
-    grid.innerHTML += `<div></div>`; // Empty corner
-    months.forEach(m => {
-        grid.innerHTML += `<div class="month-label">${m}</div>`;
-    });
+    // 1. RENDER SIDEBAR LEGEND
+    function renderSidebar() {
+        sidebar.innerHTML = '';
+        moods.forEach(m => {
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+            item.innerHTML = `<div class="legend-color" style="background:${m.color}"></div><span>${m.name}</span>`;
+            sidebar.appendChild(item);
+        });
+    }
 
-    // Day Rows (1-31)
-    for (let d = 1; d <= 31; d++) {
-        // Day Number
-        grid.innerHTML += `<div class="day-label">${d}</div>`;
+    // 2. RENDER GRID
+    function renderGrid() {
+        grid.innerHTML = '';
 
-        // 12 Columns for Months
-        for (let m = 0; m < 12; m++) {
-            const daysCount = daysInMonth(m, year);
-            if (d <= daysCount) {
-                // Valid Day
-                const dateKey = `${m}-${d}`;
-                const cell = document.createElement('div');
-                cell.className = 'day-cell';
-                
-                // If data exists, color it
-                if (moodData[dateKey]) {
-                    cell.classList.add(moodData[dateKey]);
+        // Header Row (Months)
+        grid.appendChild(createDiv('')); // Corner spacer
+        months.forEach(m => {
+            grid.appendChild(createDiv(m, 'month-label'));
+        });
+
+        // Rows (Days 1-31)
+        for (let day = 1; day <= 31; day++) {
+            // Day Number
+            grid.appendChild(createDiv(day, 'day-label'));
+
+            // 12 Months Columns
+            for (let month = 0; month < 12; month++) {
+                if (isValidDate(day, month)) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    const key = `${month}-${day}`;
+                    
+                    // Apply saved color if exists
+                    if (moodData[key]) {
+                        const m = moods.find(x => x.id === moodData[key]);
+                        if (m) cell.style.backgroundColor = m.color;
+                    }
+
+                    // CLICK EVENT: Open Modal
+                    cell.addEventListener('click', () => openModal(key, day, month));
+                    grid.appendChild(cell);
+                } else {
+                    grid.appendChild(createDiv('', 'cell empty'));
                 }
-
-                cell.onclick = () => toggleMood(cell, dateKey);
-                grid.appendChild(cell);
-            } else {
-                // Invalid Day (e.g. Feb 30)
-                grid.innerHTML += `<div class="day-cell hidden-cell"></div>`;
             }
         }
     }
 
-    // 2. GENERATE LEGEND
-    const legend = document.getElementById('legend');
-    moods.forEach(m => {
-        const btn = document.createElement('button');
-        btn.innerText = m.name;
-        btn.className = 'mood-btn';
-        btn.style.backgroundColor = m.color;
-        btn.onclick = () => selectMood(btn, m);
-        legend.appendChild(btn);
-    });
-
-    // Select first mood by default
-    selectMood(legend.children[0], moods[0]);
-
-    function selectMood(btn, mood) {
-        currentMood = mood;
-        // Visual selection state
-        Array.from(legend.children).forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-    }
-
-    function toggleMood(cell, dateKey) {
-        // Remove old classes
-        moods.forEach(m => cell.classList.remove(m.class));
-
-        // If clicking the same mood again, maybe clear it? For now, just overwrite.
-        cell.classList.add(currentMood.class);
+    // 3. RENDER MODAL BUTTONS
+    function renderModalOptions() {
+        const container = document.getElementById('moodOptions');
+        container.innerHTML = '';
         
-        // Save to Phone Storage
-        moodData[dateKey] = currentMood.class;
-        localStorage.setItem('myMoodYearData', JSON.stringify(moodData));
+        // "Clear" option
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'mood-option';
+        clearBtn.innerHTML = `<div class="mood-dot" style="border:1px solid #555"></div> Clear`;
+        clearBtn.onclick = () => saveMood(null);
+        container.appendChild(clearBtn);
+
+        // Mood options
+        moods.forEach(m => {
+            const btn = document.createElement('button');
+            btn.className = 'mood-option';
+            btn.innerHTML = `<div class="mood-dot" style="background:${m.color}"></div> ${m.name}`;
+            btn.onclick = () => saveMood(m.id);
+            container.appendChild(btn);
+        });
     }
 
-    // 3. BACKUP & RESTORE (Just in case)
-    function exportData() {
-        const dataStr = localStorage.getItem('myMoodYearData');
-        navigator.clipboard.writeText(dataStr).then(() => alert("Data copied to clipboard! Save it in a note."));
+    // --- LOGIC ---
+
+    function isValidDate(day, month) {
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        return day <= daysInMonth;
     }
+
+    function createDiv(content, className) {
+        const div = document.createElement('div');
+        if (className) div.className = className;
+        div.innerText = content;
+        return div;
+    }
+
+    // MODAL FUNCTIONS
+    const modal = document.getElementById('modal');
     
-    function importData() {
-        const dataStr = prompt("Paste your data string here:");
-        if (dataStr) {
-            localStorage.setItem('myMoodYearData', dataStr);
-            location.reload();
-        }
+    function openModal(key, day, month) {
+        selectedDateKey = key;
+        const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
+        document.getElementById('modalDateDisplay').innerText = `${monthName} ${day}`;
+        modal.style.display = 'flex';
     }
+
+    function closeModal() {
+        modal.style.display = 'none';
+        selectedDateKey = null;
+    }
+
+    function saveMood(moodId) {
+        if (!selectedDateKey) return;
+
+        if (moodId) {
+            moodData[selectedDateKey] = moodId;
+        } else {
+            delete moodData[selectedDateKey]; // Handle "Clear"
+        }
+
+        localStorage.setItem('moodYearData', JSON.stringify(moodData));
+        renderGrid(); // Re-draw grid to show new color
+        closeModal();
+    }
+
+    // EXPORT
+    window.exportData = function() {
+        const str = JSON.stringify(moodData);
+        navigator.clipboard.writeText(str).then(() => alert('Data copied to clipboard!'));
+    }
+
+    // Run on load
+    init();
+
 </script>
 </body>
 </html>
