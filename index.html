@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MoodYear">
+    <title>MoodYear</title>
+    <style>
+        :root {
+            --bg-color: #2D2B42; /* Dark background from screenshot */
+            --grid-color: #3D3B54;
+            --text-color: #ffffff;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-user-select: none; /* Disable text selection */
+        }
+        h1 { margin: 10px 0 20px 0; font-size: 32px; font-weight: 800; }
+        
+        /* THE GRID */
+        .calendar-wrapper {
+            overflow-x: auto;
+            max-width: 100%;
+            padding-bottom: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 25px repeat(12, 1fr); /* Day label + 12 months */
+            gap: 4px;
+        }
+        
+        /* LABELS */
+        .header-row { display: contents; }
+        .month-label {
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        .day-label {
+            text-align: right;
+            font-size: 10px;
+            color: #888;
+            padding-right: 5px;
+            line-height: 24px;
+        }
+        
+        /* PIXELS */
+        .day-cell {
+            width: 24px;
+            height: 24px;
+            background-color: var(--grid-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .day-cell:active { transform: scale(0.9); }
+        .hidden-cell { background: transparent; pointer-events: none; }
+
+        /* MOOD COLORS */
+        .mood-happy { background-color: #FF0055 !important; }     /* Red */
+        .mood-motivated { background-color: #FF9900 !important; } /* Orange */
+        .mood-good { background-color: #FFDD00 !important; }      /* Yellow */
+        .mood-energetic { background-color: #00CC44 !important; } /* Green */
+        .mood-relaxed { background-color: #00AACC !important; }   /* Teal */
+        .mood-sad { background-color: #0066FF !important; }       /* Blue */
+        .mood-anxious { background-color: #9900CC !important; }   /* Purple */
+        .mood-tired { background-color: #664422 !important; }     /* Brown */
+
+        /* LEGEND BUTTONS */
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            max-width: 350px;
+        }
+        .mood-btn {
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+        .mood-btn.selected { opacity: 1; outline: 3px solid white; }
+        
+        /* EXPORT BUTTON */
+        .action-btn {
+            margin-top: 30px;
+            background: #444;
+            color: #aaa;
+            border: 1px solid #555;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1 id="yearTitle">2026</h1>
+
+    <div class="calendar-wrapper">
+        <div class="grid" id="calendarGrid">
+            </div>
+    </div>
+
+    <div style="margin-top: 20px; font-size: 14px; color: #888;">Select a mood, then tap a day:</div>
+
+    <div class="controls" id="legend">
+        </div>
+
+    <button class="action-btn" onclick="exportData()">Backup Data (Copy to Clipboard)</button>
+    <button class="action-btn" onclick="importData()">Restore Data</button>
+
+<script>
+    const year = new Date().getFullYear();
+    document.getElementById('yearTitle').innerText = year;
+
+    // Mood Definitions (matches your screenshot colors roughly)
+    const moods = [
+        { name: 'Happy', class: 'mood-happy', color: '#FF0055' },
+        { name: 'Motivated', class: 'mood-motivated', color: '#FF9900' },
+        { name: 'Good', class: 'mood-good', color: '#FFDD00' },
+        { name: 'Energetic', class: 'mood-energetic', color: '#00CC44' },
+        { name: 'Relaxed', class: 'mood-relaxed', color: '#00AACC' },
+        { name: 'Sad', class: 'mood-sad', color: '#0066FF' },
+        { name: 'Anxious', class: 'mood-anxious', color: '#9900CC' },
+        { name: 'Tired', class: 'mood-tired', color: '#664422' },
+    ];
+
+    let currentMood = moods[0]; // Default selection
+    
+    // Load saved data from phone storage
+    let moodData = JSON.parse(localStorage.getItem('myMoodYearData')) || {};
+
+    const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+    const daysInMonth = (m, y) => new Date(y, m + 1, 0).getDate();
+
+    // 1. GENERATE GRID
+    const grid = document.getElementById('calendarGrid');
+
+    // Header Row (Months)
+    grid.innerHTML += `<div></div>`; // Empty corner
+    months.forEach(m => {
+        grid.innerHTML += `<div class="month-label">${m}</div>`;
+    });
+
+    // Day Rows (1-31)
+    for (let d = 1; d <= 31; d++) {
+        // Day Number
+        grid.innerHTML += `<div class="day-label">${d}</div>`;
+
+        // 12 Columns for Months
+        for (let m = 0; m < 12; m++) {
+            const daysCount = daysInMonth(m, year);
+            if (d <= daysCount) {
+                // Valid Day
+                const dateKey = `${m}-${d}`;
+                const cell = document.createElement('div');
+                cell.className = 'day-cell';
+                
+                // If data exists, color it
+                if (moodData[dateKey]) {
+                    cell.classList.add(moodData[dateKey]);
+                }
+
+                cell.onclick = () => toggleMood(cell, dateKey);
+                grid.appendChild(cell);
+            } else {
+                // Invalid Day (e.g. Feb 30)
+                grid.innerHTML += `<div class="day-cell hidden-cell"></div>`;
+            }
+        }
+    }
+
+    // 2. GENERATE LEGEND
+    const legend = document.getElementById('legend');
+    moods.forEach(m => {
+        const btn = document.createElement('button');
+        btn.innerText = m.name;
+        btn.className = 'mood-btn';
+        btn.style.backgroundColor = m.color;
+        btn.onclick = () => selectMood(btn, m);
+        legend.appendChild(btn);
+    });
+
+    // Select first mood by default
+    selectMood(legend.children[0], moods[0]);
+
+    function selectMood(btn, mood) {
+        currentMood = mood;
+        // Visual selection state
+        Array.from(legend.children).forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+    }
+
+    function toggleMood(cell, dateKey) {
+        // Remove old classes
+        moods.forEach(m => cell.classList.remove(m.class));
+
+        // If clicking the same mood again, maybe clear it? For now, just overwrite.
+        cell.classList.add(currentMood.class);
+        
+        // Save to Phone Storage
+        moodData[dateKey] = currentMood.class;
+        localStorage.setItem('myMoodYearData', JSON.stringify(moodData));
+    }
+
+    // 3. BACKUP & RESTORE (Just in case)
+    function exportData() {
+        const dataStr = localStorage.getItem('myMoodYearData');
+        navigator.clipboard.writeText(dataStr).then(() => alert("Data copied to clipboard! Save it in a note."));
+    }
+    
+    function importData() {
+        const dataStr = prompt("Paste your data string here:");
+        if (dataStr) {
+            localStorage.setItem('myMoodYearData', dataStr);
+            location.reload();
+        }
+    }
+</script>
+</body>
+</html>
