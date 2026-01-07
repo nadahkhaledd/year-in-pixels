@@ -2,3 +2,6 @@
 
 ## Year In Pixels App
 https://yearin-pixels.netlify.app/ 
+
+## App Preview
+![Year in Pixels Screenshot](./year-in-pixels.jpg)
