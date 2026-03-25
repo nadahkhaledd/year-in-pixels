@@ -141,20 +141,6 @@
         .mood-option:active { background: rgba(255,255,255,0.1); }
         .mood-dot { width: 14px; height: 14px; border-radius: 50%; }
 
-        /* Data Input Area */
-        textarea {
-            width: 90%;
-            height: 100px;
-            background: #111;
-            border: 1px solid #444;
-            color: #0f0;
-            font-family: monospace;
-            font-size: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            resize: none;
-        }
         .action-btn {
             background: #555;
             color: white;
@@ -198,13 +184,13 @@
     <div class="modal-overlay" id="dataModal">
         <div class="modal-content">
             <div class="modal-title">Backup & Restore</div>
-            
-            <p style="font-size:12px; color:#aaa; margin-bottom:10px;">To Backup: Click Copy, then paste into Notes.<br>To Restore: Paste data below and click Load.</p>
-            
-            <textarea id="dataInput" placeholder='Paste your data here...'></textarea>
-            
-            <button class="action-btn" style="background: #007AFF;" onclick="copyData()">Copy Data to Clipboard</button>
-            <button class="action-btn" style="background: #34C759;" onclick="loadData()">Load Data (Restore)</button>
+
+            <p style="font-size:12px; color:#aaa; margin-bottom:10px;">Export your data as a JSON file, or import from a previously exported file.</p>
+
+            <input type="file" id="fileInput" accept=".json" style="display:none" onchange="importFile(event)">
+
+            <button class="action-btn" style="background: #007AFF;" onclick="exportData()">Export Data (Download JSON)</button>
+            <button class="action-btn" style="background: #34C759;" onclick="document.getElementById('fileInput').click()">Import Data (Load JSON File)</button>
             <button class="action-btn btn-cancel" onclick="closeDataModal()">Close</button>
         </div>
     </div>
@@ -227,7 +213,12 @@
         { id: 'tired', name: 'Tired', color: '#664422' },
         { id: 'angry', name: 'Angry', color: '#23002C' },
         { id: 'fatigue', name: 'Fatigue', color: '#888888' },
-        { id: 'sick', name: 'Sick', color: '#f4cccc' }
+        { id: 'sick', name: 'Sick', color: '#f4cccc' },
+        { id: 'disappointed', name: 'Disappointed', color: '#C97B4B' },
+        { id: 'depressed', name: 'Depressed', color: '#2C3E6B' },
+        { id: 'moodswings', name: 'Mood Swings', color: '#E567A0' },
+        { id: 'hopeful', name: 'Hopeful', color: '#7ED4A6' },
+        { id: 'brave', name: 'Brave', color: '#D4A017' }
     ];
 
     // --- STATE ---
@@ -346,38 +337,44 @@
 
     // --- DATA MODAL ---
     const dataModal = document.getElementById('dataModal');
-    const dataInput = document.getElementById('dataInput');
 
     function openDataModal() {
         dataModal.style.display = 'flex';
-        dataInput.value = JSON.stringify(moodData);
     }
 
     function closeDataModal() {
         dataModal.style.display = 'none';
     }
 
-    function copyData() {
-        dataInput.select();
-        dataInput.setSelectionRange(0, 99999); // For mobile
-        navigator.clipboard.writeText(dataInput.value).then(() => {
-            alert('Copied! Paste this into a secure Note.');
-        });
+    function exportData() {
+        const json = JSON.stringify(moodData, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `year-in-pixels-${year}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
     }
 
-    function loadData() {
-        try {
-            const raw = dataInput.value;
-            if(!raw) return alert("Please paste data first.");
-            const parsed = JSON.parse(raw);
-            moodData = parsed;
-            localStorage.setItem('moodYearData', JSON.stringify(moodData));
-            renderGrid();
-            alert("Data restored successfully!");
-            closeDataModal();
-        } catch (e) {
-            alert("Invalid Data! Please copy the exact text exported previously.");
-        }
+    function importFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                moodData = parsed;
+                localStorage.setItem('moodYearData', JSON.stringify(moodData));
+                renderGrid();
+                alert("Data restored successfully!");
+                closeDataModal();
+            } catch (err) {
+                alert("Invalid file! Please select a valid JSON export file.");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
     }
 
     init();
