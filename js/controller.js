@@ -3,7 +3,7 @@ import { dataStore } from './data.js';
 import { UI } from './ui_logic.js';
 
 let activeModalDateKey = null;
-let tempSelectedMoods = []; // Now an Array!
+let tempSelectedMoods = [];
 
 function initializeApp() {
     UI.init();
