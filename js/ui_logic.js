@@ -41,9 +41,21 @@ export const UI = {
                     const key = `${month}-${day}`;
                     
                     const entry = dataStore.getEntry(key);
-                    if (entry.mood) {
-                        const m = MOODS.find(x => x.id === entry.mood);
-                        if (m) cell.style.backgroundColor = m.color;
+                    if (entry.moods && entry.moods.length > 0) {
+                        const colors = entry.moods.map(id => MOODS.find(x => x.id === id)?.color).filter(c => c);
+                        
+                        if (colors.length === 1) {
+                            cell.style.background = colors[0]; // Single color
+                        } else if (colors.length > 1) {
+                            // Multiple colors: Create sharp diagonal stripes
+                            let gradientStops = [];
+                            let percentage = 100 / colors.length;
+                            for (let i = 0; i < colors.length; i++) {
+                                gradientStops.push(`${colors[i]} ${i * percentage}%`);
+                                gradientStops.push(`${colors[i]} ${(i + 1) * percentage}%`);
+                            }
+                            cell.style.background = `linear-gradient(135deg, ${gradientStops.join(', ')})`;
+                        }
                     }
                     
                     cell.addEventListener('click', () => onCellClick(key, day, month));
@@ -55,20 +67,19 @@ export const UI = {
         }
     },
 
-    renderMoodOptions(selectedMood, onMoodSelect) {
+    renderMoodOptions(selectedMoodsArray, onMoodSelect) {
         this.elements.moodOptions.innerHTML = '';
         
-        // Clear Button
         const clearBtn = document.createElement('button');
-        clearBtn.className = `mood-option ${selectedMood === null ? 'selected' : ''}`;
+        clearBtn.className = `mood-option ${selectedMoodsArray.length === 0 ? 'selected' : ''}`;
         clearBtn.innerHTML = `<div class="mood-dot" style="border:1px solid #555"></div> Clear`;
         clearBtn.addEventListener('click', () => onMoodSelect(null));
         this.elements.moodOptions.appendChild(clearBtn);
 
-        // Mood Buttons
         MOODS.forEach(m => {
+            const isSelected = selectedMoodsArray.includes(m.id);
             const btn = document.createElement('button');
-            btn.className = `mood-option ${selectedMood === m.id ? 'selected' : ''}`;
+            btn.className = `mood-option ${isSelected ? 'selected' : ''}`;
             btn.innerHTML = `<div class="mood-dot" style="background:${m.color}"></div> ${m.name}`;
             btn.addEventListener('click', () => onMoodSelect(m.id));
             this.elements.moodOptions.appendChild(btn);
