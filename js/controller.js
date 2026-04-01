@@ -3,7 +3,7 @@ import { dataStore } from './data.js';
 import { UI } from './ui_logic.js';
 
 let activeModalDateKey = null;
-let tempSelectedMood = null;
+let tempSelectedMoods = []; // Now an Array!
 
 function initializeApp() {
     UI.init();
@@ -12,36 +12,44 @@ function initializeApp() {
     setupEventListeners();
 }
 
-// --- MOOD MODAL LOGIC ---
 function openMoodModal(key, day, month) {
     activeModalDateKey = key;
     const monthName = new Date(CURRENT_YEAR, month).toLocaleString('default', { month: 'long' });
     UI.elements.modalDateDisplay.innerText = `${monthName} ${day}`;
     
     const existingData = dataStore.getEntry(key);
-    tempSelectedMood = existingData.mood;
+    tempSelectedMoods = [...existingData.moods];
     UI.elements.dailySummary.value = existingData.summary;
     
-    UI.renderMoodOptions(tempSelectedMood, handleMoodSelection);
+    UI.renderMoodOptions(tempSelectedMoods, handleMoodSelection);
     UI.elements.moodModal.style.display = 'flex';
 }
 
 function handleMoodSelection(moodId) {
-    tempSelectedMood = moodId;
-    UI.renderMoodOptions(tempSelectedMood, handleMoodSelection); 
+    if (moodId === null) {
+        tempSelectedMoods = [];
+    } else {
+        const index = tempSelectedMoods.indexOf(moodId);
+        if (index > -1) {
+            tempSelectedMoods.splice(index, 1);
+        } else {
+            tempSelectedMoods.push(moodId);
+        }
+    }
+    UI.renderMoodOptions(tempSelectedMoods, handleMoodSelection); 
 }
 
 function closeMoodModal() {
     UI.elements.moodModal.style.display = 'none';
     activeModalDateKey = null;
-    tempSelectedMood = null;
+    tempSelectedMoods = [];
 }
 
 function saveMoodData() {
     if (!activeModalDateKey) return;
     const summaryText = UI.elements.dailySummary.value.trim();
     
-    dataStore.saveData(activeModalDateKey, tempSelectedMood, summaryText);
+    dataStore.saveData(activeModalDateKey, tempSelectedMoods, summaryText);
     UI.renderGrid(dataStore, openMoodModal);
     closeMoodModal();
 }
