@@ -6,15 +6,20 @@ class DataService {
         this.data = this.loadData();
     }
 
-    loadData() {
-        let rawData = JSON.parse(localStorage.getItem(this.storageKey)) || {};
-        // Data Migration: Ensure old string formats become objects
-        Object.keys(rawData).forEach(key => {
-            if (typeof rawData[key] === 'string') {
-                rawData[key] = { mood: rawData[key], summary: "" };
+
+    migrateRawData(rawData) {
+        let migrated = { ...rawData };
+        Object.keys(migrated).forEach(key => {
+            if (typeof migrated[key] === 'string') {
+                migrated[key] = { mood: migrated[key], summary: "" };
             }
         });
-        return rawData;
+        return migrated;
+    }
+
+    loadData() {
+        let rawData = JSON.parse(localStorage.getItem(this.storageKey)) || {};
+        return this.migrateRawData(rawData); // Upgrade upon loading
     }
 
     saveData(key, moodId, summary) {
@@ -30,7 +35,6 @@ class DataService {
         return this.data[key] || { mood: null, summary: "" };
     }
 
-    // --- File Options ---
     exportJSON() {
         const json = JSON.stringify(this.data, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
@@ -46,7 +50,8 @@ class DataService {
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                this.data = JSON.parse(e.target.result);
+                let parsed = JSON.parse(e.target.result);
+                this.data = this.migrateRawData(parsed); // Upgrade upon file import
                 localStorage.setItem(this.storageKey, JSON.stringify(this.data));
                 callback(true);
             } catch (err) {
@@ -56,7 +61,6 @@ class DataService {
         reader.readAsText(file);
     }
 
-    // --- Text Options ---
     exportJSONText() {
         return JSON.stringify(this.data, null, 2);
     }
@@ -64,8 +68,8 @@ class DataService {
     importJSONText(jsonString) {
         try {
             if (!jsonString) return false;
-            const parsed = JSON.parse(jsonString);
-            this.data = parsed;
+            let parsed = JSON.parse(jsonString);
+            this.data = this.migrateRawData(parsed);
             localStorage.setItem(this.storageKey, JSON.stringify(this.data));
             return true;
         } catch (err) {
