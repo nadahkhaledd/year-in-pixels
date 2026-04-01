@@ -141,7 +141,6 @@ h1 { margin: 0; font-size: 28px; font-weight: 800; }
 }
 .mood-dot { width: 14px; height: 14px; border-radius: 50%; }
 
-/* Textareas */
 textarea {
     width: 90%;
     background: #1A1829;
@@ -155,7 +154,6 @@ textarea {
     resize: none;
 }
 
-/* Buttons */
 .btn-group {
     display: flex;
     gap: 10px;

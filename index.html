@@ -1,52 +1,63 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Year In Pixels</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <header>
-        <h1 id="yearLabel"></h1>
-        <button id="btnOpenData" class="btn-small">Data</button>
-    </header>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <title>Year In Pixels</title>
+        <link rel="stylesheet" href="css/style.css">
+    </head>
+    <body>
+        <header>
+            <h1 id="yearLabel"></h1>
+            <button id="btnOpenData" class="btn-small">Data</button>
+        </header>
 
-    <div class="main-container">
-        <div class="calendar-wrapper">
-            <div class="grid" id="grid"></div>
+        <div class="main-container">
+            <div class="calendar-wrapper">
+                <div class="grid" id="grid"></div>
+            </div>
+            <div class="legend-sidebar" id="sidebar"></div>
         </div>
-        <div class="legend-sidebar" id="sidebar"></div>
-    </div>
 
-    <div class="modal-overlay" id="moodModal">
-        <div class="modal-content">
-            <div class="modal-title" id="modalDateDisplay">Select Mood</div>
-            <div class="mood-grid" id="moodOptions"></div>
-            <textarea id="dailySummary" rows="3" placeholder="Summary about today..."></textarea>
-            <div class="btn-group">
-                <button id="btnCancelMood" class="action-btn btn-cancel">Cancel</button>
-                <button id="btnSaveMood" class="action-btn" style="background: #34C759;">Save</button>
+        <div class="modal-overlay" id="moodModal">
+            <div class="modal-content">
+                <div class="modal-title" id="modalDateDisplay">Select Mood</div>
+                <div class="mood-grid" id="moodOptions"></div>
+                <textarea id="dailySummary" rows="3" placeholder="Summary about today..."></textarea>
+                <div class="btn-group">
+                    <button id="btnCancelMood" class="action-btn btn-cancel">Cancel</button>
+                    <button id="btnSaveMood" class="action-btn" style="background: #34C759;">Save</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="modal-overlay" id="dataModal">
-        <div class="modal-content">
-            <div class="modal-title">Backup & Restore</div>
-            <p style="font-size:12px; color:#aaa; margin-bottom:10px;">Export or import JSON data.</p>
-            <input type="file" id="fileInput" accept=".json" style="display:none">
-            
-            <div class="btn-group">
-                <button id="btnExportData" class="action-btn" style="background: #007AFF;">Download .json</button>
-                <button id="btnImportData" class="action-btn" style="background: #34C759;">Upload .json</button>
+        <div class="modal-overlay" id="dataModal">
+            <div class="modal-content">
+                <div class="modal-title">Backup & Restore</div>
+                
+                <p style="font-size:12px; color:#aaa; margin-bottom:10px;">Paste JSON below, or use files.</p>
+                <textarea id="dataInput" rows="4" style="font-family: monospace; font-size: 10px; color: #0f0;" placeholder='Paste JSON data here...'></textarea>
+                
+                <div class="btn-group">
+                    <button id="btnCopyData" class="action-btn" style="background: #007AFF;">Copy Text</button>
+                    <button id="btnLoadTextData" class="action-btn" style="background: #34C759;">Load Text</button>
+                </div>
+
+                <hr style="border:0; border-top:1px solid #444; margin:15px 0;">
+
+                <input type="file" id="fileInput" accept=".json" style="display:none">
+                
+                <div class="btn-group">
+                    <button id="btnExportData" class="action-btn" style="background: #007AFF;">Download .json</button>
+                    <button id="btnImportData" class="action-btn" style="background: #34C759;">Upload .json</button>
+                </div>
+                
+                <button id="btnCloseData" class="action-btn btn-cancel" style="margin-top:5px;">Close</button>
             </div>
-            <button id="btnCloseData" class="action-btn btn-cancel" style="margin-top:5px;">Close</button>
         </div>
-    </div>
 
-    <script type="module" src="js/controller.js"></script>
-</body>
-</html>
+        <script type="module" src="js/controller.js"></script>
+    </body>
+    </html>

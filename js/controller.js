@@ -12,7 +12,7 @@ function initializeApp() {
     setupEventListeners();
 }
 
-
+// --- MOOD MODAL LOGIC ---
 function openMoodModal(key, day, month) {
     activeModalDateKey = key;
     const monthName = new Date(CURRENT_YEAR, month).toLocaleString('default', { month: 'long' });
@@ -28,7 +28,7 @@ function openMoodModal(key, day, month) {
 
 function handleMoodSelection(moodId) {
     tempSelectedMood = moodId;
-    UI.renderMoodOptions(tempSelectedMood, handleMoodSelection); // Re-render to show selection
+    UI.renderMoodOptions(tempSelectedMood, handleMoodSelection); 
 }
 
 function closeMoodModal() {
@@ -46,19 +46,36 @@ function saveMoodData() {
     closeMoodModal();
 }
 
-// --- EVENT LISTENERS ---
 function setupEventListeners() {
-    // Mood Modal
     document.getElementById('btnSaveMood').addEventListener('click', saveMoodData);
     document.getElementById('btnCancelMood').addEventListener('click', closeMoodModal);
 
-    // Data Modal
     document.getElementById('btnOpenData').addEventListener('click', () => {
+        UI.elements.dataInput.value = dataStore.exportJSONText(); 
         UI.elements.dataModal.style.display = 'flex';
     });
     
     document.getElementById('btnCloseData').addEventListener('click', () => {
         UI.elements.dataModal.style.display = 'none';
+    });
+
+    document.getElementById('btnCopyData').addEventListener('click', () => {
+        UI.elements.dataInput.select();
+        UI.elements.dataInput.setSelectionRange(0, 99999); 
+        navigator.clipboard.writeText(UI.elements.dataInput.value).then(() => {
+            alert('Copied JSON text to clipboard!');
+        });
+    });
+
+    document.getElementById('btnLoadTextData').addEventListener('click', () => {
+        const success = dataStore.importJSONText(UI.elements.dataInput.value);
+        if (success) {
+            UI.renderGrid(dataStore, openMoodModal);
+            alert("Data restored from text!");
+            UI.elements.dataModal.style.display = 'none';
+        } else {
+            alert("Invalid JSON text data. Please check what you pasted.");
+        }
     });
 
     document.getElementById('btnExportData').addEventListener('click', () => {
@@ -75,13 +92,13 @@ function setupEventListeners() {
         dataStore.importJSON(file, (success) => {
             if (success) {
                 UI.renderGrid(dataStore, openMoodModal);
-                alert("Data restored successfully!");
+                alert("Data restored from file!");
                 UI.elements.dataModal.style.display = 'none';
             } else {
                 alert("Invalid JSON file.");
             }
         });
-        event.target.value = ''; // Reset input
+        event.target.value = ''; 
     });
 }
 

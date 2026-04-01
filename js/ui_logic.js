@@ -6,6 +6,7 @@ export const UI = {
         sidebar: document.getElementById('sidebar'),
         moodModal: document.getElementById('moodModal'),
         dataModal: document.getElementById('dataModal'),
+        dataInput: document.getElementById('dataInput'),
         modalDateDisplay: document.getElementById('modalDateDisplay'),
         moodOptions: document.getElementById('moodOptions'),
         dailySummary: document.getElementById('dailySummary')

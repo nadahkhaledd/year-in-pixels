@@ -30,6 +30,7 @@ class DataService {
         return this.data[key] || { mood: null, summary: "" };
     }
 
+    // --- File Options ---
     exportJSON() {
         const json = JSON.stringify(this.data, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
@@ -53,6 +54,23 @@ class DataService {
             }
         };
         reader.readAsText(file);
+    }
+
+    // --- Text Options ---
+    exportJSONText() {
+        return JSON.stringify(this.data, null, 2);
+    }
+
+    importJSONText(jsonString) {
+        try {
+            if (!jsonString) return false;
+            const parsed = JSON.parse(jsonString);
+            this.data = parsed;
+            localStorage.setItem(this.storageKey, JSON.stringify(this.data));
+            return true;
+        } catch (err) {
+            return false; 
+        }
     }
 }
 
