@@ -6,170 +6,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Year In Pixels</title>
-    <style>
-        :root {
-            --bg-color: #201E33;
-            --cell-bg: #35334c;
-            --text-color: #ffffff;
-            --modal-bg: #2D2B42;
-            --accent: #444;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            -webkit-user-select: none;
-            touch-action: manipulation;
-        }
-
-        /* HEADER */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #444;
-            margin-bottom: 10px;
-        }
-        h1 { margin: 0; font-size: 28px; font-weight: 800; }
-        .btn-small {
-            background: var(--accent); border: none; color: white;
-            padding: 8px 15px; border-radius: 6px; font-size: 13px; font-weight: 600;
-        }
-
-        /* MAIN LAYOUT */
-        .main-container {
-            display: flex;
-            flex: 1;
-            gap: 10px;
-            overflow: hidden;
-        }
-
-        /* LEFT: CALENDAR GRID */
-        .calendar-wrapper {
-            flex: 1;
-            overflow: auto;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 20px repeat(12, 1fr);
-            gap: 2px;
-            width: 100%;
-            min-width: 280px;
-        }
-        
-        .month-label { text-align: center; font-size: 10px; font-weight: bold; color: #888; padding-bottom: 2px; }
-        .day-label { text-align: right; font-size: 9px; color: #666; padding-right: 4px; line-height: 20px; }
-
-        .cell {
-            aspect-ratio: 1;
-            background-color: var(--cell-bg);
-            border-radius: 2px;
-            cursor: pointer;
-        }
-        .cell:active { opacity: 0.7; }
-        .cell.empty { background: transparent; pointer-events: none; }
-
-        /* RIGHT: LEGEND SIDEBAR */
-        .legend-sidebar {
-            width: 90px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            overflow-y: auto;
-            padding-left: 5px;
-            border-left: 1px solid #333;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            color: #ddd;
-        }
-        .legend-color {
-            width: 12px; height: 12px;
-            border-radius: 3px;
-            flex-shrink: 0;
-        }
-
-        /* MODAL POPUP SYSTEM */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: var(--modal-bg);
-            padding: 20px;
-            border-radius: 12px;
-            width: 85%;
-            max-width: 320px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .modal-title { margin-bottom: 15px; font-size: 18px; font-weight: bold; color: white; }
-        
-        /* Mood Grid */
-        .mood-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-        .mood-option {
-            background: rgba(255,255,255,0.05);
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            color: white;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .mood-option:active { background: rgba(255,255,255,0.1); }
-        .mood-dot { width: 14px; height: 14px; border-radius: 50%; }
-
-        .action-btn {
-            background: #555;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 14px;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .btn-cancel { background: transparent; color: #888; }
-
-        /* MOOD COLORS */
-        .bg-happy { background-color: #FF0055 !important; }
-        
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
     <header>
-        <h1 id="yearLabel">2026</h1>
-        <button class="btn-small" onclick="openDataModal()">Data</button>
+        <h1 id="yearLabel"></h1>
+        <button id="btnOpenData" class="btn-small">Data</button>
     </header>
 
     <div class="main-container">
         <div class="calendar-wrapper">
             <div class="grid" id="grid"></div>
         </div>
-
         <div class="legend-sidebar" id="sidebar"></div>
     </div>
 
@@ -177,208 +25,28 @@
         <div class="modal-content">
             <div class="modal-title" id="modalDateDisplay">Select Mood</div>
             <div class="mood-grid" id="moodOptions"></div>
-            <button class="action-btn btn-cancel" onclick="closeMoodModal()">Cancel</button>
+            <textarea id="dailySummary" rows="3" placeholder="Summary about today..."></textarea>
+            <div class="btn-group">
+                <button id="btnCancelMood" class="action-btn btn-cancel">Cancel</button>
+                <button id="btnSaveMood" class="action-btn" style="background: #34C759;">Save</button>
+            </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="dataModal">
         <div class="modal-content">
             <div class="modal-title">Backup & Restore</div>
-
-            <p style="font-size:12px; color:#aaa; margin-bottom:10px;">Export your data as a JSON file, or import from a previously exported file.</p>
-
-            <input type="file" id="fileInput" accept=".json" style="display:none" onchange="importFile(event)">
-
-            <button class="action-btn" style="background: #007AFF;" onclick="exportData()">Export Data (Download JSON)</button>
-            <button class="action-btn" style="background: #34C759;" onclick="document.getElementById('fileInput').click()">Import Data (Load JSON File)</button>
-            <button class="action-btn btn-cancel" onclick="closeDataModal()">Close</button>
+            <p style="font-size:12px; color:#aaa; margin-bottom:10px;">Export or import JSON data.</p>
+            <input type="file" id="fileInput" accept=".json" style="display:none">
+            
+            <div class="btn-group">
+                <button id="btnExportData" class="action-btn" style="background: #007AFF;">Download .json</button>
+                <button id="btnImportData" class="action-btn" style="background: #34C759;">Upload .json</button>
+            </div>
+            <button id="btnCloseData" class="action-btn btn-cancel" style="margin-top:5px;">Close</button>
         </div>
     </div>
 
-<script>
-    // --- CONFIGURATION ---
-    const year = new Date().getFullYear();
-    document.getElementById('yearLabel').innerText = year;
-
-    const moods = [
-        { id: 'happy', name: 'Happy', color: '#FF0055' },
-        { id: 'motivated', name: 'Motivated', color: '#FF9900' },
-        { id: 'excited', name: 'Excited', color: '#badeaa' },
-        {id: 'productive', name: 'Productive', color: '#fe0e9b' },
-        { id: 'good', name: 'Good', color: '#FFDD00' },
-        { id: 'energetic', name: 'Energetic', color: '#00CC44' },
-        { id: 'relaxed', name: 'Relaxed', color: '#00AACC' },
-        { id: 'sad', name: 'Sad', color: '#0066FF' },
-        { id: 'anxious', name: 'Anxious', color: '#9900CC' },
-        { id: 'tired', name: 'Tired', color: '#664422' },
-        { id: 'angry', name: 'Angry', color: '#23002C' },
-        { id: 'fatigue', name: 'Fatigue', color: '#888888' },
-        { id: 'sick', name: 'Sick', color: '#f4cccc' },
-        { id: 'disappointed', name: 'Disappointed', color: '#C97B4B' },
-        { id: 'depressed', name: 'Depressed', color: '#2C3E6B' },
-        { id: 'moodswings', name: 'Mood Swings', color: '#E567A0' },
-        { id: 'hopeful', name: 'Hopeful', color: '#7ED4A6' },
-        { id: 'brave', name: 'Brave', color: '#D4A017' }
-    ];
-
-    // --- STATE ---
-    let moodData = JSON.parse(localStorage.getItem('moodYearData')) || {};
-    let selectedDateKey = null;
-
-    // --- INITIALIZATION ---
-    const grid = document.getElementById('grid');
-    const sidebar = document.getElementById('sidebar');
-    const months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
-
-    function init() {
-        renderSidebar();
-        renderGrid();
-        renderModalOptions();
-    }
-
-    // 1. RENDER SIDEBAR LEGEND
-    function renderSidebar() {
-        sidebar.innerHTML = '';
-        moods.forEach(m => {
-            const item = document.createElement('div');
-            item.className = 'legend-item';
-            item.innerHTML = `<div class="legend-color" style="background:${m.color}"></div><span>${m.name}</span>`;
-            sidebar.appendChild(item);
-        });
-    }
-
-    // 2. RENDER GRID
-    function renderGrid() {
-        grid.innerHTML = '';
-        // Header Row
-        grid.appendChild(createDiv('')); 
-        months.forEach(m => grid.appendChild(createDiv(m, 'month-label')));
-
-        // Rows
-        for (let day = 1; day <= 31; day++) {
-            grid.appendChild(createDiv(day, 'day-label'));
-            for (let month = 0; month < 12; month++) {
-                if (isValidDate(day, month)) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    const key = `${month}-${day}`;
-                    
-                    if (moodData[key]) {
-                        const m = moods.find(x => x.id === moodData[key]);
-                        if (m) cell.style.backgroundColor = m.color;
-                    }
-                    cell.addEventListener('click', () => openMoodModal(key, day, month));
-                    grid.appendChild(cell);
-                } else {
-                    grid.appendChild(createDiv('', 'cell empty'));
-                }
-            }
-        }
-    }
-
-    // 3. RENDER MOOD BUTTONS
-    function renderModalOptions() {
-        const container = document.getElementById('moodOptions');
-        container.innerHTML = '';
-        
-        // Clear Button
-        const clearBtn = document.createElement('button');
-        clearBtn.className = 'mood-option';
-        clearBtn.innerHTML = `<div class="mood-dot" style="border:1px solid #555"></div> Clear`;
-        clearBtn.onclick = () => saveMood(null);
-        container.appendChild(clearBtn);
-
-        // Mood Buttons
-        moods.forEach(m => {
-            const btn = document.createElement('button');
-            btn.className = 'mood-option';
-            btn.innerHTML = `<div class="mood-dot" style="background:${m.color}"></div> ${m.name}`;
-            btn.onclick = () => saveMood(m.id);
-            container.appendChild(btn);
-        });
-    }
-
-    // --- LOGIC ---
-    function isValidDate(day, month) {
-        return day <= new Date(year, month + 1, 0).getDate();
-    }
-
-    function createDiv(content, className) {
-        const div = document.createElement('div');
-        if (className) div.className = className;
-        div.innerText = content;
-        return div;
-    }
-
-    // --- MOOD MODAL ---
-    const moodModal = document.getElementById('moodModal');
-    
-    function openMoodModal(key, day, month) {
-        selectedDateKey = key;
-        const monthName = new Date(year, month).toLocaleString('default', { month: 'long' });
-        document.getElementById('modalDateDisplay').innerText = `${monthName} ${day}`;
-        moodModal.style.display = 'flex';
-    }
-
-    function closeMoodModal() {
-        moodModal.style.display = 'none';
-        selectedDateKey = null;
-    }
-
-    function saveMood(moodId) {
-        if (!selectedDateKey) return;
-        if (moodId) moodData[selectedDateKey] = moodId;
-        else delete moodData[selectedDateKey];
-        
-        localStorage.setItem('moodYearData', JSON.stringify(moodData));
-        renderGrid();
-        closeMoodModal();
-    }
-
-    // --- DATA MODAL ---
-    const dataModal = document.getElementById('dataModal');
-
-    function openDataModal() {
-        dataModal.style.display = 'flex';
-    }
-
-    function closeDataModal() {
-        dataModal.style.display = 'none';
-    }
-
-    function exportData() {
-        const json = JSON.stringify(moodData, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `year-in-pixels-${year}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-
-    function importFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const parsed = JSON.parse(e.target.result);
-                moodData = parsed;
-                localStorage.setItem('moodYearData', JSON.stringify(moodData));
-                renderGrid();
-                alert("Data restored successfully!");
-                closeDataModal();
-            } catch (err) {
-                alert("Invalid file! Please select a valid JSON export file.");
-            }
-        };
-        reader.readAsText(file);
-        event.target.value = '';
-    }
-
-    init();
-
-</script>
+    <script type="module" src="js/controller.js"></script>
 </body>
 </html>
