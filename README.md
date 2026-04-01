@@ -4,5 +4,8 @@
 https://yearin-pixels.netlify.app/ 
 
 <p align="left">
-  <img src="./year-in-pixels.jpg" width="30%">
+  <img src="./media/screenshots/add-as-webapp.jpg" width="30%">
+  <img src="./media/screenshots/enter-moods.jpg" width="30%">
+  <img src="./media/screenshots/home.jpg" width="30%">
+  <img src="./media/screenshots/backup.jpg" width="30%">
 </p>
