@@ -6,12 +6,19 @@ class DataService {
         this.data = this.loadData();
     }
 
-
     migrateRawData(rawData) {
         let migrated = { ...rawData };
         Object.keys(migrated).forEach(key => {
             if (typeof migrated[key] === 'string') {
-                migrated[key] = { mood: migrated[key], summary: "" };
+                migrated[key] = { moods: [migrated[key]], summary: "" };
+            }
+            else if (migrated[key].mood !== undefined) {
+                let moodArray = migrated[key].mood ? [migrated[key].mood] : [];
+                migrated[key] = { moods: moodArray, summary: migrated[key].summary || "" };
+                delete migrated[key].mood; // Clean up old property
+            }
+            if (!migrated[key].moods) {
+                migrated[key].moods = [];
             }
         });
         return migrated;
@@ -19,20 +26,20 @@ class DataService {
 
     loadData() {
         let rawData = JSON.parse(localStorage.getItem(this.storageKey)) || {};
-        return this.migrateRawData(rawData); // Upgrade upon loading
+        return this.migrateRawData(rawData);
     }
 
-    saveData(key, moodId, summary) {
-        if (!moodId && summary === "") {
+    saveData(key, moodIdsArray, summary) {
+        if (moodIdsArray.length === 0 && summary === "") {
             delete this.data[key];
         } else {
-            this.data[key] = { mood: moodId, summary: summary };
+            this.data[key] = { moods: moodIdsArray, summary: summary };
         }
         localStorage.setItem(this.storageKey, JSON.stringify(this.data));
     }
 
     getEntry(key) {
-        return this.data[key] || { mood: null, summary: "" };
+        return this.data[key] || { moods: [], summary: "" };
     }
 
     exportJSON() {
@@ -51,7 +58,7 @@ class DataService {
         reader.onload = (e) => {
             try {
                 let parsed = JSON.parse(e.target.result);
-                this.data = this.migrateRawData(parsed); // Upgrade upon file import
+                this.data = this.migrateRawData(parsed);
                 localStorage.setItem(this.storageKey, JSON.stringify(this.data));
                 callback(true);
             } catch (err) {
