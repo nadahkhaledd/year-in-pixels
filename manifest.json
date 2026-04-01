@@ -1,0 +1,17 @@
+{
+  "name": "Year In Pixels",
+  "short_name": "MyYear",
+  "description": "A daily mood tracker",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#201E33",
+  "theme_color": "#201E33",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
