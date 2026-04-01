@@ -1,0 +1,173 @@
+:root {
+    --bg-color: #201E33;
+    --cell-bg: #35334c;
+    --text-color: #ffffff;
+    --modal-bg: #2D2B42;
+    --accent: #444;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+/* HEADER */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+    margin-bottom: 10px;
+}
+h1 { margin: 0; font-size: 28px; font-weight: 800; }
+.btn-small {
+    background: var(--accent); border: none; color: white;
+    padding: 8px 15px; border-radius: 6px; font-size: 13px; font-weight: 600;
+}
+
+/* MAIN LAYOUT */
+.main-container {
+    display: flex;
+    flex: 1;
+    gap: 10px;
+    overflow: hidden;
+}
+
+/* LEFT: CALENDAR GRID */
+.calendar-wrapper {
+    flex: 1;
+    overflow: auto;
+}
+.grid {
+    display: grid;
+    grid-template-columns: 20px repeat(12, 1fr);
+    gap: 2px;
+    width: 100%;
+    min-width: 280px;
+}
+
+.month-label { text-align: center; font-size: 10px; font-weight: bold; color: #888; padding-bottom: 2px; }
+.day-label { text-align: right; font-size: 9px; color: #666; padding-right: 4px; line-height: 20px; }
+
+.cell {
+    aspect-ratio: 1;
+    background-color: var(--cell-bg);
+    border-radius: 2px;
+    cursor: pointer;
+}
+.cell:active { opacity: 0.7; }
+.cell.empty { background: transparent; pointer-events: none; }
+
+/* RIGHT: LEGEND SIDEBAR */
+.legend-sidebar {
+    width: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    padding-left: 5px;
+    border-left: 1px solid #333;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #ddd;
+}
+.legend-color {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+/* MODAL POPUP SYSTEM */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: var(--modal-bg);
+    padding: 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 350px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.modal-title { margin-bottom: 15px; font-size: 18px; font-weight: bold; color: white; }
+
+/* Mood Grid inside Modal */
+.mood-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 2px;
+}
+.mood-option {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid transparent;
+    padding: 8px;
+    border-radius: 8px;
+    color: white;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+.mood-option.selected {
+    border-color: white;
+    background: rgba(255,255,255,0.15);
+}
+.mood-dot { width: 14px; height: 14px; border-radius: 50%; }
+
+textarea {
+    width: 90%;
+    background: #1A1829;
+    border: 1px solid #444;
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    resize: none;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.action-btn {
+    background: #555;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 100%;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn-cancel { background: transparent; color: #888; border: 1px solid #555; }
